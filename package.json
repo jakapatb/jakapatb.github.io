@@ -9,7 +9,7 @@
     "export": "npm run build && next export && touch out/.nojekyll",
     "serve": "npm run export && serve out",
     "deploy": "npm run export && node gh-pages.js",
-    "deploy-storybook": "storybook-to-ghpages",
+    "deploy-storybook": "storybook-to-ghpages --branch=master",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"
   },

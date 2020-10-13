@@ -1,22 +1,25 @@
-import React from 'react';
-import './button.css';
+import React, { useState } from "react";
+import "./button.css";
+import styled from "styled-components";
+import { motion, AnimatePresence } from "framer-motion";
+import _ from "lodash";
+const ButtonContainer = styled.button`
+  position: relative;
+  width: 20rem;
+  height: 8rem;
+  overflow: hidden;
+`;
 
+const Ripple = styled(motion.span)`
+  position: absolute;
+  background: red;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  width: 1em;
+  height: 1em;
+`;
 export interface ButtonProps {
-  /**
-   * Is this the principal call to action on the page?
-   */
-  primary?: boolean;
-  /**
-   * What background color to use
-   */
-  backgroundColor?: string;
-  /**
-   * How large should the button be?
-   */
-  size?: 'small' | 'medium' | 'large';
-  /**
-   * Button contents
-   */
+  duration: number;
   label: string;
   /**
    * Optional click handler
@@ -28,21 +31,39 @@ export interface ButtonProps {
  * Primary UI component for user interaction
  */
 export const Button: React.FC<ButtonProps> = ({
-  primary = false,
-  size = 'medium',
-  backgroundColor,
   label,
+  onClick,
+  duration,
   ...props
 }) => {
-  const mode = primary ? 'storybook-button--primary' : 'storybook-button--secondary';
+  const [ripples, setRipples] = useState([]);
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    onClick();
+    const x = e.clientX - e.currentTarget.offsetLeft;
+    const y = e.clientY - e.currentTarget.offsetTop;
+    const newRippleIndex = `${label}-${ripples.length + 1}`;
+    setRipples((prev) => [...prev, { x, y, id: newRippleIndex }]);
+    _.debounce(
+      () =>
+        setRipples((prev) => prev.filter(({ id }) => id !== newRippleIndex)),
+      1000
+    );
+  };
+
   return (
-    <button
-      type="button"
-      className={['storybook-button', `storybook-button--${size}`, mode].join(' ')}
-      style={{ backgroundColor }}
-      {...props}
-    >
+    <ButtonContainer type="button" {...props} onClick={handleClick}>
       {label}
-    </button>
+      <AnimatePresence>
+        {ripples.map(({ x, y }, index) => (
+          <Ripple
+            key={index}
+            style={{ left: x, top: y }}
+            initial={{ fontSize: "0rem", opacity: 0.5 }}
+            animate={{ fontSize: "20rem", opacity: 0 }}
+            transition={{ duration }}
+          />
+        ))}
+      </AnimatePresence>
+    </ButtonContainer>
   );
 };
